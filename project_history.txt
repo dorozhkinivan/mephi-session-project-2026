@@ -1,0 +1,53 @@
+    1  nmcli connection modify eth0 ipv4.method manual ipv4.addresses 192.168.1.100/24 ipv4.gateway 192.168.1.1 ipv4.dns 8.8.8.8
+    2  nmcli connection up eth0
+    3  hostnamectl set-hostname mephi-2026.domain.local
+    4  ping -c 4 8.8.8.8 > /tmp/network_check.txt
+    5  cat /tmp/network_check.txt
+    6  ping -c 4 192.168.1.1 >> /tmp/network_check.txt
+    7  cat /tmp/network_check.txt
+    8  dnf install -y nginx tcpdump libcap-ng-utils policycoreutils-python-utils
+    9  cd /tmp
+   10  dnf download tcpdump
+   11  rpm -ivh --replacepkgs tcpdump*.rpm
+   12  lsblk
+   13  echo -e "n\np\n1\n\n\nw" | fdisk /dev/vdb
+   14  mkfs.ext4 -L MEPHI_DATA /dev/vdb1
+   15  mkdir -p /data/mephi-web
+   16  echo "LABEL=MEPHI_DATA /data/mephi-web ext4 defaults 0 2" >> /etc/fstab
+   17  mount -a
+   18  df -h | grep mephi
+   19  systemctl daemon-reload
+   20  sed -i 's|root         /usr/share/nginx/html;|root         /data/mephi-web;|g' /etc/nginx/nginx.conf
+   21  systemctl enable --now nginx
+   22  journalctl -u nginx --since "5 minutes ago" > /tmp/nginx_recent_logs.txt
+   23  groupadd mephi-devs
+   24  useradd -G mephi-devs mephi-admin
+   25  echo "mephi-admin:P@ssw0rd2026" | chpasswd
+   26  chown -R mephi-admin:mephi-devs /data/mephi-web
+   27  chmod 2775 /data/mephi-web
+   28  semanage fcontext -a -t httpd_sys_content_t "/data/mephi-web(/.*)?"
+   29  restorecon -Rv /data/mephi-web
+   30  chmod u-s /usr/sbin/tcpdump
+   31  ls
+   32  setcap 'cap_net_raw,cap_net_admin+ep' /usr/sbin/tcpdump
+   33  ls
+   34  sudo -u mephi-admin tcpdump --help
+   35  echo "root" > /etc/ssh/denied_users
+   36  sed -i '1 a auth required pam_listfile.so item=user sense=deny file=/etc/ssh/denied_users onerr=succeed' /etc/pam.d/sshd
+   37  sed -i '1 a auth required pam_listfile.so item=user sense=deny file=/etc/ssh/denied_users onerr=succeed' /etc/pam.d/login
+   38  sudo -u mephi-admin bash -c 'echo "Hello from Student: 255961" > /data/mephi-web/index.html'
+   39  restorecon -v /data/mephi-web/index.html
+   40  curl http://192.168.1.100
+   41  mkdir -p /home/ivan/mephi-session-project-2026/
+   42  cp /tmp/network_check.txt /home/ivan/mephi-session-project-2026/
+   43  cp /etc/fstab /home/ivan/mephi-session-project-2026/fstab.txt
+   44  cp /tmp/nginx_recent_logs.txt /home/ivan/mephi-session-project-2026/
+   45  getenforce > /home/ivan/mephi-session-project-2026/selinux_status.txt
+   46  ls -Zd /data/mephi-web > /home/ivan/mephi-session-project-2026/file_contexts.txt
+   47  getcap /usr/sbin/tcpdump > /home/ivan/mephi-session-project-2026/tcpdump_capabilities.txt
+   48  stat /data/mephi-web > /home/ivan/mephi-session-project-2026/permissions.txt
+   49  id mephi-admin > /home/ivan/mephi-session-project-2026/users_groups.txt
+   50  getent group mephi-devs >> /home/ivan/mephi-session-project-2026/users_groups.txt
+   51  curl -s http://192.168.1.100 > /home/ivan/mephi-session-project-2026/curl_output.txt
+   52  cp /tmp/tcpdump*.rpm /home/ivan/mephi-session-project-2026/tcpdump.rpm
+   53  history > /home/ivan/mephi-session-project-2026/project_history.txt
